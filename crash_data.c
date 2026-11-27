@@ -80,6 +80,38 @@ Arbre * creerAVL(uint64_t cle){
     return nouveau;
 }
 
+Arbre * rotationGauche(Arbre *a){
+    Arbre *pivot = a->fd;
+    int eq_a = a->eq, eq_p = pivot->eq;
+
+    a->fd = pivot->fg;
+    pivot->fg = a;
+    a->eq = eq_a - max(eq_p, 0) - 1;
+    pivot->eq = min(min(eq_a - 2, eq_a + eq_p - 2), eq_p - 1);
+    return pivot;
+}
+
+Arbre * rotationDroite(Arbre *a){
+    Arbre *pivot = a->fg;
+    int eq_a = a->eq, eq_p = pivot->eq;
+
+    a->fg = pivot->fd;
+    pivot->fd = a;
+    a->eq = eq_a - min(eq_p, 0) + 1;
+    pivot->eq = max(max(eq_a + 2, eq_a + eq_p + 2), eq_p + 1);
+    return pivot;
+}
+
+Arbre * doubleRotationGauche(Arbre *a){
+    a->fd = rotationDroite(a->fd);
+    return rotationGauche(a);
+}
+
+Arbre * doubleRotationDroite(Arbre *a){
+    a->fg = rotationGauche(a->fg);
+    return rotationDroite(a);
+}
+
 Arbre * equilibrerAVL(Arbre * a){
     if(a->eq >= 2){
         if(a->fd->eq >= 0) return rotationGauche(a);
@@ -119,39 +151,8 @@ Arbre * insererAVL(Arbre * a, uint64_t cle, int *h, Arbre **noeud){
     return a;
 }
 
-Arbre * rotationGauche(Arbre *a){
-    Arbre *pivot = a->fd;
-    int eq_a = a->eq, eq_p = pivot->eq;
 
-    a->fd = pivot->fg;
-    pivot->fg = a;
-    a->eq = eq_a - max(eq_p, 0) - 1;
-    pivot->eq = min(min(eq_a - 2, eq_a + eq_p - 2), eq_p - 1);
-    return pivot;
-}
-
-Arbre * rotationDroite(Arbre *a){
-    Arbre *pivot = a->fg;
-    int eq_a = a->eq, eq_p = pivot->eq;
-
-    a->fg = pivot->fd;
-    pivot->fd = a;
-    a->eq = eq_a - min(eq_p, 0) + 1;
-    pivot->eq = max(max(eq_a + 2, eq_a + eq_p + 2), eq_p + 1);
-    return pivot;
-}
-
-Arbre * doubleRotationGauche(Arbre *a){
-    a->fd = rotationDroite(a->fd);
-    return rotationGauche(a);
-}
-
-Arbre * doubleRotationDroite(Arbre *a){
-    a->fg = rotationGauche(a->fg);
-    return rotationDroite(a);
-}
-
-void afficherInfixe(pArbre a){
+void afficherInfixe(Arbre * a){
     if(a == NULL) return;
     afficherInfixe(a->fg);
     printf("%llu (eq=%d)\n", (unsigned long long)a->cle, a->eq);
@@ -188,6 +189,6 @@ int main(int argc, char *argv[]){
         racine = insererAVL(racine, test[i], &h, &noeud);
     }
     afficherInfixe(racine);
-    
+
     return 0;
 }
