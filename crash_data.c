@@ -16,7 +16,7 @@ typedef struct victime{
 
 typedef struct vehicule{
     char id[4];
-    uint8_t trajet;
+    int8_t trajet;
     Victime *victimes;
     struct vehicule * suivant;
 } Vehicule;
@@ -26,7 +26,7 @@ typedef struct arbre{
 	struct arbre * fg;
 	struct arbre * fd;
     Vehicule *vehicules;
-	uint8_t eq;
+	int8_t eq;
 }Arbre;
 
 /*On utilise uint8_t et uint64_t pour une meilleur gestion de l'espace.
@@ -49,7 +49,7 @@ Victime * creerVictime(uint8_t age, uint8_t type, uint8_t genre, uint8_t gravite
     return v;
 }
 
-Vehicule * creerVehicule(const char *id, uint8_t trajet){
+Vehicule * creerVehicule(const char *id, int8_t trajet){
     Vehicule *v = malloc(sizeof(Vehicule));
     if(v==NULL){
         printf("Erreur de segmentation");
@@ -76,32 +76,11 @@ Arbre * creerAVL(uint64_t cle){
     nouveau->fd = NULL;
     nouveau->vehicules = NULL;
     nouveau->eq = 0;
+
+    return nouveau;
 }
 
-int main(int argc, char *argv[]){
-    if(argc < 2){
-        fprintf(stderr, "Usage : %s fichier.csv\n", argv[0]);
-        return 1;
-    }
-    const char *chemin = argv[1];
-
-    FILE *ficher = fopen(chemin, "r");
-    if(ficher == NULL){
-        fprintf(stderr, "Erreur : impossible d'ouvrir %s\n", chemin);
-        exit(1);
-    }
-
-    char ligne[256];
-    fgets(ligne, sizeof ligne, ficher);      // en-tête
-    while(fgets(ligne, sizeof ligne, ficher) != NULL){
-        printf("%s", ligne);
-    }
-
-    fclose(ficher);
-    return 0;
-}
-
-pArbre equilibrerAVL(pArbre a){
+Arbre * equilibrerAVL(Arbre * a){
     if(a->eq >= 2){
         if(a->fd->eq >= 0) return rotationGauche(a);
         return doubleRotationGauche(a);
@@ -111,9 +90,10 @@ pArbre equilibrerAVL(pArbre a){
         return doubleRotationDroite(a);
     }
     return a;
+}
 
 
-pArbre insererAVL(pArbre a, uint64_t cle, int *h, pArbre *noeud){
+Arbre * insererAVL(Arbre * a, uint64_t cle, int *h, Arbre **noeud){
     if(a == NULL){
         *h = 1;
         a = creerAVL(cle);
@@ -137,18 +117,7 @@ pArbre insererAVL(pArbre a, uint64_t cle, int *h, pArbre *noeud){
         *h = (a->eq == 0) ? 0 : 1;
     }
     return a;
-	}
 }
-
-
-void afficherInfixe(pArbre a){
-    if(a == NULL) return;
-    afficherInfixe(a->fg);
-    printf("%llu (eq=%d)\n", (unsigned long long)a->cle, a->eq);
-    afficherInfixe(a->fd);
-}
-
-
 
 Arbre * rotationGauche(Arbre *a){
     Arbre *pivot = a->fd;
@@ -182,13 +151,43 @@ Arbre * doubleRotationDroite(Arbre *a){
     return rotationDroite(a);
 }
 
-
-
-Arbre *racine = NULL, *noeud;
-int h;
-uint64_t test[] = {5, 3, 8, 1, 2, 9, 10, 7, 4, 6};
-for(int i = 0; i < 10; i++){
-    h = 0;
-    racine = insererAVL(racine, test[i], &h, &noeud);
+void afficherInfixe(pArbre a){
+    if(a == NULL) return;
+    afficherInfixe(a->fg);
+    printf("%llu (eq=%d)\n", (unsigned long long)a->cle, a->eq);
+    afficherInfixe(a->fd);
 }
-afficherInfixe(racine);
+
+
+int main(int argc, char *argv[]){
+    if(argc < 2){
+        fprintf(stderr, "Usage : %s fichier.csv\n", argv[0]);
+        return 1;
+    }
+    const char *chemin = argv[1];
+
+    FILE *ficher = fopen(chemin, "r");
+    if(ficher == NULL){
+        fprintf(stderr, "Erreur : impossible d'ouvrir %s\n", chemin);
+        exit(1);
+    }
+
+    char ligne[256];
+    fgets(ligne, sizeof ligne, ficher);      // en-tête
+    while(fgets(ligne, sizeof ligne, ficher) != NULL){
+        printf("%s", ligne);
+    }
+
+    fclose(ficher);
+
+    Arbre *racine = NULL, *noeud;
+    int h;
+    uint64_t test[] = {5, 3, 8, 1, 2, 9, 10, 7, 4, 6};
+    for(int i = 0; i < 10; i++){
+        h = 0;
+        racine = insererAVL(racine, test[i], &h, &noeud);
+    }
+    afficherInfixe(racine);
+    
+    return 0;
+}
